@@ -1,0 +1,9 @@
+Direct Connection:
+postgresql://postgres:ClothEng@987@db.uhxtzoqmkwxwrxtnfbwy.supabase.co:5432/postgres
+
+DATABASE_URL:
+postgresql://postgres.uhxtzoqmkwxwrxtnfbwy:ClothEng@987@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres
+
+Project URL — https://uhxtzoqmkwxwrxtnfbwy.supabase.co
+anon public key — eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVoeHR6b3Fta3d4d3J4dG5mYnd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTI4MDMsImV4cCI6MjA5NjMyODgwM30.Bq91kRZsicJXDtUTPRlhCZnPjRf5UG5ffUw6E7_zgBk
+service_role - eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVoeHR6b3Fta3d4d3J4dG5mYnd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDc1MjgwMywiZXhwIjoyMDk2MzI4ODAzfQ.GXh1TWaHF7NBifCxmvvWac7bZY_WEwuW_YfVVN9RmyA
