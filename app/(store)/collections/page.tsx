@@ -1,6 +1,6 @@
-import { prisma } from "@/engine/lib/prisma"
-import Image from "next/image"
-import Link from "next/link"
+import { prisma } from "@/engine/lib/prisma";
+import Image from "next/image";
+import Link from "next/link";
 
 export default async function CollectionsPage() {
   const collections = await prisma.collection.findMany({
@@ -19,7 +19,7 @@ export default async function CollectionsPage() {
       _count: { select: { products: true } },
     },
     orderBy: { sortOrder: "asc" },
-  })
+  });
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12">
@@ -31,8 +31,7 @@ export default async function CollectionsPage() {
       </h1>
       <div className="grid md:grid-cols-2 gap-10">
         {collections.map((collection) => {
-          const image =
-            collection.products[0]?.product?.images[0]?.url ?? null
+          const image = collection.products[0]?.product?.images[0]?.url ?? null;
           return (
             <Link
               key={collection.id}
@@ -63,9 +62,9 @@ export default async function CollectionsPage() {
                 </p>
               </div>
             </Link>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }

@@ -1,45 +1,59 @@
-import { prisma } from "@/engine/lib/prisma"
-import { notFound } from "next/navigation"
-import Image from "next/image"
-import Link from "next/link"
-import AddToCartButton from "@/engine/components/product/AddToCartButton"
+import { prisma } from "@/engine/lib/prisma";
+import { notFound } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import AddToCartButton from "@/engine/components/product/AddToCartButton";
+import { getWishlistIds } from "@/engine/api/wishlist";
+import { WishlistButton } from "@/engine/components/product/WishlistButton";
 
 export default async function ProductDetailPage({
   params,
 }: {
-  params: Promise<{ slug: string }>
+  params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params
+  const { slug } = await params;
 
-  const product = await prisma.product.findUnique({
-    where: { slug },
-    include: {
-      images: { orderBy: { sortOrder: "asc" } },
-      category: true,
-      variants: { where: { isActive: true }, orderBy: { sku: "asc" } },
-    },
-  })
+  const [product, wishlistIds] = await Promise.all([
+    prisma.product.findUnique({
+      where: { slug },
+      include: {
+        images: { orderBy: { sortOrder: "asc" } },
+        category: true,
+        variants: { where: { isActive: true }, orderBy: { sku: "asc" } },
+      },
+    }),
+    getWishlistIds(),
+  ]);
 
-  if (!product) notFound()
+  if (!product) notFound();
 
-  const metadata = product.metadata as Record<string, string>
+  const metadata = product.metadata as Record<string, string>;
 
-  const sizes = [...new Set(
-    product.variants.map((v) => (v.attributes as Record<string, string>).size)
-  )].filter(Boolean)
+  const sizes = [
+    ...new Set(
+      product.variants.map(
+        (v) => (v.attributes as Record<string, string>).size,
+      ),
+    ),
+  ].filter(Boolean);
 
-  const colours = [...new Set(
-    product.variants.map((v) => (v.attributes as Record<string, string>).colour)
-  )].filter(Boolean)
+  const colours = [
+    ...new Set(
+      product.variants.map(
+        (v) => (v.attributes as Record<string, string>).colour,
+      ),
+    ),
+  ].filter(Boolean);
 
-  const primaryImage = product.images.find((i) => i.isPrimary) ?? product.images[0]
+  const primaryImage =
+    product.images.find((i) => i.isPrimary) ?? product.images[0];
 
   function formatLKR(amount: number) {
     return new Intl.NumberFormat("en-LK", {
       style: "currency",
       currency: "LKR",
       minimumFractionDigits: 0,
-    }).format(amount)
+    }).format(amount);
   }
 
   const serializedVariants = product.variants.map((v) => ({
@@ -47,22 +61,24 @@ export default async function ProductDetailPage({
     price: Number(v.price),
     createdAt: v.createdAt.toISOString(),
     updatedAt: v.updatedAt.toISOString(),
-  }))
+  }));
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12">
-
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-[11px] tracking-[0.1em] uppercase text-[#8C8C8C] mb-8">
-        <Link href="/" className="hover:text-[#0A0A0A]">Home</Link>
+        <Link href="/" className="hover:text-[#0A0A0A]">
+          Home
+        </Link>
         <span>/</span>
-        <Link href="/products" className="hover:text-[#0A0A0A]">Products</Link>
+        <Link href="/products" className="hover:text-[#0A0A0A]">
+          Products
+        </Link>
         <span>/</span>
         <span className="text-[#0A0A0A]">{product.name}</span>
       </nav>
 
       <div className="grid md:grid-cols-2 gap-12 lg:gap-20">
-
         {/* Images */}
         <div className="space-y-3">
           <div className="relative aspect-[3/4] bg-[#F2F2F2] overflow-hidden">
@@ -104,12 +120,20 @@ export default async function ProductDetailPage({
           <p className="text-[10px] tracking-[0.2em] uppercase text-[#8C8C8C] mb-2">
             {product.category.name}
           </p>
-          <h1
-            className="text-3xl md:text-4xl text-[#0A0A0A] leading-tight"
-            style={{ fontFamily: "var(--font-serif)" }}
-          >
-            {product.name}
-          </h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1
+              className="text-3xl md:text-4xl text-[#0A0A0A] leading-tight"
+              style={{ fontFamily: "var(--font-serif)" }}
+            >
+              {product.name}
+            </h1>
+            <div className="relative mt-1">
+              <WishlistButton
+                productId={product.id}
+                initialWishlisted={wishlistIds.includes(product.id)}
+              />
+            </div>
+          </div>
           <p className="mt-3 text-lg text-[#0A0A0A]">
             {formatLKR(Number(product.basePrice))}
           </p>
@@ -143,7 +167,9 @@ export default async function ProductDetailPage({
                   <p className="text-[10px] tracking-[0.15em] uppercase text-[#8C8C8C]">
                     Material
                   </p>
-                  <p className="text-sm text-[#0A0A0A] mt-1">{metadata.material}</p>
+                  <p className="text-sm text-[#0A0A0A] mt-1">
+                    {metadata.material}
+                  </p>
                 </div>
               )}
               {metadata.careInstructions && (
@@ -151,7 +177,9 @@ export default async function ProductDetailPage({
                   <p className="text-[10px] tracking-[0.15em] uppercase text-[#8C8C8C]">
                     Care
                   </p>
-                  <p className="text-sm text-[#0A0A0A] mt-1">{metadata.careInstructions}</p>
+                  <p className="text-sm text-[#0A0A0A] mt-1">
+                    {metadata.careInstructions}
+                  </p>
                 </div>
               )}
             </div>
@@ -159,5 +187,5 @@ export default async function ProductDetailPage({
         </div>
       </div>
     </div>
-  )
+  );
 }

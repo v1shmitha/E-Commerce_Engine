@@ -276,3 +276,14 @@ model ProductCollection {
   @@id([productId, collectionId])
   @@map("product_collections")
 }
+
+// ─── STORE SETTINGS ──────────────────────────────────
+
+model StoreSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("store_settings")
+}

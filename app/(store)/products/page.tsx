@@ -1,3 +1,5 @@
+import { getWishlistIds } from "@/engine/api/wishlist"
+import { WishlistButton } from "@/engine/components/product/WishlistButton"
 import { prisma } from "@/engine/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
@@ -48,10 +50,13 @@ export default async function ProductsPage({
           : { createdAt: "desc" },
   });
 
-  const categories = await prisma.category.findMany({
-    where: { isActive: true },
-    orderBy: { sortOrder: "asc" },
-  });
+  const [categories, wishlistIds] = await Promise.all([
+    prisma.category.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: "asc" },
+    }),
+    getWishlistIds(),
+  ]);
 
   const allSizes = ["XS", "S", "M", "L", "XL", "XXL"];
   const allColours = [
@@ -259,6 +264,10 @@ export default async function ProductsPage({
                           Sold Out
                         </div>
                       )}
+                      <WishlistButton
+                        productId={product.id}
+                        initialWishlisted={wishlistIds.includes(product.id)}
+                      />
                     </div>
                     <div className="mt-3 space-y-0.5">
                       <p className="text-[10px] tracking-[0.15em] uppercase text-[#8C8C8C]">
