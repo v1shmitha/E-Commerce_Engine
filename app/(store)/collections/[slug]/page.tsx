@@ -1,16 +1,14 @@
+import { cache } from "react"
+import type { Metadata } from "next"
 import { prisma } from "@/engine/lib/prisma"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { absoluteUrl, truncate, SITE_NAME } from "@/engine/lib/seo"
 
-export default async function CollectionDetailPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}) {
-  const { slug } = await params
-
-  const collection = await prisma.collection.findUnique({
+// Memoised so generateMetadata and the page component share one query per request.
+const getCollection = cache(async (slug: string) =>
+  prisma.collection.findUnique({
     where: { slug },
     include: {
       products: {
@@ -26,7 +24,56 @@ export default async function CollectionDetailPage({
         orderBy: { sortOrder: "asc" },
       },
     },
-  })
+  }),
+)
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const collection = await getCollection(slug)
+
+  if (!collection) {
+    return { title: "Collection not found" }
+  }
+
+  const description = collection.description
+    ? truncate(collection.description)
+    : `Explore the ${collection.name} collection at ${SITE_NAME}.`
+  const url = absoluteUrl(`/collections/${collection.slug}`)
+  const image = collection.products.find((p) => p.product.images[0])?.product
+    .images[0]
+
+  return {
+    title: collection.name,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "website",
+      title: collection.name,
+      description,
+      url,
+      images: image ? [{ url: image.url, alt: collection.name }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: collection.name,
+      description,
+      images: image ? [image.url] : undefined,
+    },
+  }
+}
+
+export default async function CollectionDetailPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = await params
+
+  const collection = await getCollection(slug)
 
   if (!collection) notFound()
 

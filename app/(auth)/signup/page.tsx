@@ -1,13 +1,31 @@
+"use client"
+
 import { signUp } from "@/engine/api/auth"
+import { useState } from "react"
 
 export default function SignUpPage() {
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSubmit(formData: FormData) {
+    const result = await signUp(formData)
+    if (result?.error) {
+      setError(result.error)
+    }
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <form
-        action={signUp}
+        action={handleSubmit}
         className="w-full max-w-sm space-y-4 rounded-lg border p-6"
       >
         <h1 className="text-xl font-semibold">Create an account</h1>
+
+        {error && (
+          <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
+            {error}
+          </p>
+        )}
 
         <div className="space-y-2">
           <label htmlFor="firstName" className="text-sm font-medium">

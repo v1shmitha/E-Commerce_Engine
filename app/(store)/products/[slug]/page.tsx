@@ -1,3 +1,5 @@
+import { cache } from "react";
+import type { Metadata } from "next";
 import { prisma } from "@/engine/lib/prisma";
 import { notFound } from "next/navigation";
 import Image from "next/image";
@@ -5,6 +7,60 @@ import Link from "next/link";
 import AddToCartButton from "@/engine/components/product/AddToCartButton";
 import { getWishlistIds } from "@/engine/api/wishlist";
 import { WishlistButton } from "@/engine/components/product/WishlistButton";
+import { absoluteUrl, truncate, SITE_NAME } from "@/engine/lib/seo";
+import { storeConfig } from "@/config/stores/clothing.config";
+
+// Memoised so generateMetadata and the page component share one query per request.
+const getProduct = cache(async (slug: string) =>
+  prisma.product.findUnique({
+    where: { slug },
+    include: {
+      images: { orderBy: { sortOrder: "asc" } },
+      category: true,
+      variants: { where: { isActive: true }, orderBy: { sku: "asc" } },
+    },
+  }),
+);
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await getProduct(slug);
+
+  if (!product) {
+    return { title: "Product not found" };
+  }
+
+  const description = product.description
+    ? truncate(product.description)
+    : `Shop ${product.name} in ${product.category.name} at ${SITE_NAME}.`;
+  const image = product.images.find((i) => i.isPrimary) ?? product.images[0];
+  const url = absoluteUrl(`/products/${product.slug}`);
+
+  return {
+    title: product.name,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "website",
+      title: product.name,
+      description,
+      url,
+      images: image
+        ? [{ url: image.url, alt: image.altText ?? product.name }]
+        : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description,
+      images: image ? [image.url] : undefined,
+    },
+  };
+}
 
 export default async function ProductDetailPage({
   params,
@@ -14,14 +70,7 @@ export default async function ProductDetailPage({
   const { slug } = await params;
 
   const [product, wishlistIds] = await Promise.all([
-    prisma.product.findUnique({
-      where: { slug },
-      include: {
-        images: { orderBy: { sortOrder: "asc" } },
-        category: true,
-        variants: { where: { isActive: true }, orderBy: { sku: "asc" } },
-      },
-    }),
+    getProduct(slug),
     getWishlistIds(),
   ]);
 
@@ -63,8 +112,36 @@ export default async function ProductDetailPage({
     updatedAt: v.updatedAt.toISOString(),
   }));
 
+  const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
+  const productUrl = absoluteUrl(`/products/${product.slug}`);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description ?? undefined,
+    image: product.images.map((i) => i.url),
+    sku: product.variants[0]?.sku ?? undefined,
+    category: product.category.name,
+    brand: { "@type": "Brand", name: SITE_NAME },
+    offers: {
+      "@type": "Offer",
+      url: productUrl,
+      priceCurrency: storeConfig.currency,
+      price: Number(product.basePrice),
+      availability:
+        totalStock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+    },
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-6 py-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-[11px] tracking-[0.1em] uppercase text-[#8C8C8C] mb-8">
         <Link href="/" className="hover:text-[#0A0A0A]">

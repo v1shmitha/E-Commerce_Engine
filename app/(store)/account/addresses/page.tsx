@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { AddressForm } from "@/engine/components/account/AddressForm"
 import { deleteAddress, setDefaultAddress } from "@/engine/api/addresses"
+import { DeleteAddressForm } from "@/engine/components/account/DeleteAddressForm"
 
 export default async function AddressesPage() {
   const supabase = await createClient()
@@ -82,19 +83,7 @@ export default async function AddressesPage() {
                         </button>
                       </form>
                     )}
-                    <form
-                      action={deleteWithId}
-                      onSubmit={(e) => {
-                        if (!confirm("Delete this address?")) e.preventDefault()
-                      }}
-                    >
-                      <button
-                        type="submit"
-                        className="text-[11px] tracking-[0.1em] uppercase text-red-400 hover:text-red-600 transition-colors"
-                      >
-                        Delete
-                      </button>
-                    </form>
+                    <DeleteAddressForm deleteAction={deleteWithId} />
                   </div>
                 </div>
               </div>

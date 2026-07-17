@@ -1,8 +1,46 @@
-import { getWishlistIds } from "@/engine/api/wishlist"
-import { WishlistButton } from "@/engine/components/product/WishlistButton"
+import { getWishlistIds } from "@/engine/api/wishlist";
+import { WishlistButton } from "@/engine/components/product/WishlistButton";
 import { prisma } from "@/engine/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
+import { absoluteUrl, SITE_NAME } from "@/engine/lib/seo";
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>;
+}): Promise<Metadata> {
+  const { category: categorySlug } = await searchParams;
+
+  const category = categorySlug
+    ? await prisma.category.findUnique({ where: { slug: categorySlug } })
+    : null;
+
+  if (category) {
+    const description =
+      category.description ??
+      `Shop ${category.name} at ${SITE_NAME}. Browse the latest styles and sizes.`;
+    return {
+      title: category.name,
+      description,
+      alternates: {
+        canonical: absoluteUrl(`/products?category=${category.slug}`),
+      },
+      openGraph: {
+        title: `${category.name} | ${SITE_NAME}`,
+        description,
+        url: absoluteUrl(`/products?category=${category.slug}`),
+      },
+    };
+  }
+
+  return {
+    title: "All Products",
+    description: `Browse every product available at ${SITE_NAME}.`,
+    alternates: { canonical: absoluteUrl("/products") },
+  };
+}
 
 export default async function ProductsPage({
   searchParams,
@@ -260,14 +298,16 @@ export default async function ProductsPage({
                         <div className="absolute inset-0 bg-[#F2F2F2]" />
                       )}
                       {totalStock === 0 && (
-                        <div className="absolute top-3 left-3 bg-white px-2 py-1 text-[10px] tracking-[0.1em] uppercase text-[#8C8C8C]">
+                        <div className="absolute top-3 left-3 bg-white px-12 py-1 text-[10px] tracking-[0.1em] uppercase text-[#8C8C8C]">
                           Sold Out
                         </div>
                       )}
-                      <WishlistButton
-                        productId={product.id}
-                        initialWishlisted={wishlistIds.includes(product.id)}
-                      />
+                      <div className="absolute top-3 right-3 z-10">
+                        <WishlistButton
+                          productId={product.id}
+                          initialWishlisted={wishlistIds.includes(product.id)}
+                        />
+                      </div>
                     </div>
                     <div className="mt-3 space-y-0.5">
                       <p className="text-[10px] tracking-[0.15em] uppercase text-[#8C8C8C]">

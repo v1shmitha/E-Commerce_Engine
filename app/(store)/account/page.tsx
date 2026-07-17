@@ -1,35 +1,45 @@
-import { createClient } from "@/engine/lib/supabase/server"
-import { prisma } from "@/engine/lib/prisma"
-import { redirect } from "next/navigation"
-import Link from "next/link"
-import { signOut } from "@/engine/api/auth"
+import { createClient } from "@/engine/lib/supabase/server";
+import { prisma } from "@/engine/lib/prisma";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { signOut } from "@/engine/api/auth";
 
 export default async function AccountPage() {
-  const supabase = await createClient()
-  const { data } = await supabase.auth.getUser()
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getUser();
 
-  if (!data.user) redirect("/login")
+  if (!data.user) redirect("/login");
 
-  const customer = await prisma.customer.findUnique({
-    where: { id: data.user.id },
-    include: {
-      orders: {
-        orderBy: { createdAt: "desc" },
-        take: 5,
-        include: { items: true },
+  const [customer, orderCount] = await Promise.all([
+    prisma.customer.findUnique({
+      where: { id: data.user.id },
+      include: {
+        orders: {
+          orderBy: { createdAt: "desc" },
+          take: 5,
+          include: { items: true },
+        },
+        _count: { select: { wishlistItems: true } },
       },
-      _count: { select: { orders: true, wishlistItems: true } },
-    },
-  })
+    }),
+    prisma.order.count({
+      where: {
+        customerId: data.user.id,
+        NOT: {
+          AND: [{ status: "PENDING" }, { paymentStatus: "PENDING" }],
+        },
+      },
+    }),
+  ]);
 
-  if (!customer) redirect("/login")
+  if (!customer) redirect("/login");
 
   function formatLKR(amount: number) {
     return new Intl.NumberFormat("en-LK", {
       style: "currency",
       currency: "LKR",
       minimumFractionDigits: 0,
-    }).format(amount)
+    }).format(amount);
   }
 
   return (
@@ -62,17 +72,19 @@ export default async function AccountPage() {
           <p className="text-[10px] tracking-[0.15em] uppercase text-[#8C8C8C]">
             Orders
           </p>
-          <p className="mt-2 text-2xl text-[#0A0A0A]"
+          <p
+            className="mt-2 text-2xl text-[#0A0A0A]"
             style={{ fontFamily: "var(--font-serif)" }}
           >
-            {customer._count.orders}
+            {orderCount}
           </p>
         </div>
         <div className="border border-[#E0E0E0] p-5">
           <p className="text-[10px] tracking-[0.15em] uppercase text-[#8C8C8C]">
             Wishlist
           </p>
-          <p className="mt-2 text-2xl text-[#0A0A0A]"
+          <p
+            className="mt-2 text-2xl text-[#0A0A0A]"
             style={{ fontFamily: "var(--font-serif)" }}
           >
             {customer._count.wishlistItems}
@@ -82,7 +94,8 @@ export default async function AccountPage() {
           <p className="text-[10px] tracking-[0.15em] uppercase text-[#8C8C8C]">
             Member Since
           </p>
-          <p className="mt-2 text-lg text-[#0A0A0A]"
+          <p
+            className="mt-2 text-lg text-[#0A0A0A]"
             style={{ fontFamily: "var(--font-serif)" }}
           >
             {new Date(customer.createdAt).toLocaleDateString("en-LK", {
@@ -108,9 +121,7 @@ export default async function AccountPage() {
           href="/account/wishlist"
           className="flex items-center justify-between border border-[#E0E0E0] p-4 hover:border-[#0A0A0A] transition-colors group"
         >
-          <span className="text-sm font-medium text-[#0A0A0A]">
-            Wishlist
-          </span>
+          <span className="text-sm font-medium text-[#0A0A0A]">Wishlist</span>
           <span className="text-[#8C8C8C] group-hover:text-[#0A0A0A]">→</span>
         </Link>
         <Link
@@ -173,7 +184,8 @@ export default async function AccountPage() {
                     {order.orderNumber}
                   </p>
                   <p className="text-xs text-[#8C8C8C] mt-0.5">
-                    {order.items.length} item{order.items.length !== 1 ? "s" : ""} ·{" "}
+                    {order.items.length} item
+                    {order.items.length !== 1 ? "s" : ""} ·{" "}
                     {new Date(order.createdAt).toLocaleDateString("en-LK", {
                       year: "numeric",
                       month: "short",
@@ -190,10 +202,10 @@ export default async function AccountPage() {
                       order.status === "DELIVERED"
                         ? "text-green-600"
                         : order.status === "CANCELLED"
-                        ? "text-red-500"
-                        : order.status === "SHIPPED"
-                        ? "text-blue-600"
-                        : "text-[#8C8C8C]"
+                          ? "text-red-500"
+                          : order.status === "SHIPPED"
+                            ? "text-blue-600"
+                            : "text-[#8C8C8C]"
                     }`}
                   >
                     {order.status}
@@ -205,5 +217,5 @@ export default async function AccountPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

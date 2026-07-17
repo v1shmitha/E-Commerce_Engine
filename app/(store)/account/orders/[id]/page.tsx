@@ -1,19 +1,19 @@
-import { createClient } from "@/engine/lib/supabase/server"
-import { prisma } from "@/engine/lib/prisma"
-import { redirect, notFound } from "next/navigation"
-import Link from "next/link"
-import Image from "next/image"
+import { createClient } from "@/engine/lib/supabase/server";
+import { prisma } from "@/engine/lib/prisma";
+import { redirect, notFound } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 
 export default async function OrderDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }) {
-  const { id } = await params
-  const supabase = await createClient()
-  const { data } = await supabase.auth.getUser()
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getUser();
 
-  if (!data.user) redirect("/login")
+  if (!data.user) redirect("/login");
 
   const order = await prisma.order.findUnique({
     where: { id, customerId: data.user.id },
@@ -34,26 +34,32 @@ export default async function OrderDetailPage({
       shippingAddress: true,
       payment: true,
     },
-  })
+  });
 
-  if (!order) notFound()
+  if (!order) notFound();
 
   function formatLKR(amount: number) {
     return new Intl.NumberFormat("en-LK", {
       style: "currency",
       currency: "LKR",
       minimumFractionDigits: 0,
-    }).format(amount)
+    }).format(amount);
   }
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-12">
       <div className="flex items-center gap-3 mb-10">
-        <Link href="/account" className="text-[11px] tracking-[0.1em] uppercase text-[#8C8C8C] hover:text-[#0A0A0A]">
+        <Link
+          href="/account"
+          className="text-[11px] tracking-[0.1em] uppercase text-[#8C8C8C] hover:text-[#0A0A0A]"
+        >
           Account
         </Link>
         <span className="text-[#E0E0E0]">/</span>
-        <Link href="/account/orders" className="text-[11px] tracking-[0.1em] uppercase text-[#8C8C8C] hover:text-[#0A0A0A]">
+        <Link
+          href="/account/orders"
+          className="text-[11px] tracking-[0.1em] uppercase text-[#8C8C8C] hover:text-[#0A0A0A]"
+        >
           Orders
         </Link>
         <span className="text-[#E0E0E0]">/</span>
@@ -79,30 +85,21 @@ export default async function OrderDetailPage({
             })}
           </p>
         </div>
-        <div className="text-right space-y-1">
+        <div className="text-right">
           <span
-            className={`block text-[10px] tracking-[0.1em] uppercase px-3 py-1 ${
+            className={`inline-block text-[10px] tracking-[0.1em] uppercase px-3 py-1 ${
               order.status === "DELIVERED"
                 ? "bg-green-50 text-green-600"
                 : order.status === "CANCELLED"
-                ? "bg-red-50 text-red-500"
-                : order.status === "SHIPPED"
-                ? "bg-blue-50 text-blue-600"
-                : "bg-[#F2F2F2] text-[#8C8C8C]"
+                  ? "bg-red-50 text-red-500"
+                  : order.status === "SHIPPED"
+                    ? "bg-blue-50 text-blue-600"
+                    : order.status === "PROCESSING"
+                      ? "bg-blue-50 text-blue-600"
+                      : "bg-yellow-50 text-yellow-600"
             }`}
           >
             {order.status}
-          </span>
-          <span
-            className={`block text-[10px] tracking-[0.1em] uppercase px-3 py-1 ${
-              order.paymentStatus === "COMPLETED"
-                ? "bg-green-50 text-green-600"
-                : order.paymentStatus === "FAILED"
-                ? "bg-red-50 text-red-500"
-                : "bg-[#F2F2F2] text-[#8C8C8C]"
-            }`}
-          >
-            {order.paymentStatus}
           </span>
         </div>
       </div>
@@ -110,8 +107,8 @@ export default async function OrderDetailPage({
       {/* Items */}
       <div className="border border-[#E0E0E0] divide-y divide-[#E0E0E0] mb-6">
         {order.items.map((item) => {
-          const attrs = item.variant.attributes as Record<string, string>
-          const image = item.variant.product.images[0]
+          const attrs = item.variant.attributes as Record<string, string>;
+          const image = item.variant.product.images[0];
           return (
             <div key={item.id} className="flex gap-4 p-4">
               <div className="relative w-16 h-20 bg-[#F2F2F2] shrink-0">
@@ -142,7 +139,7 @@ export default async function OrderDetailPage({
                 {formatLKR(Number(item.totalPrice))}
               </p>
             </div>
-          )
+          );
         })}
       </div>
 
@@ -176,6 +173,31 @@ export default async function OrderDetailPage({
           <p className="text-[10px] tracking-[0.15em] uppercase text-[#8C8C8C] mb-3">
             Payment
           </p>
+          <div className="flex items-center gap-3 mb-3">
+            <span
+              className={`text-[10px] tracking-[0.1em] uppercase px-2 py-0.5 ${
+                order.paymentStatus === "COMPLETED"
+                  ? "bg-green-50 text-green-600"
+                  : order.paymentStatus === "FAILED"
+                    ? "bg-red-50 text-red-500"
+                    : order.paymentStatus === "CANCELLED"
+                      ? "bg-red-50 text-red-500"
+                      : order.paymentStatus === "CHARGEDBACK"
+                        ? "bg-red-50 text-red-500"
+                        : "bg-yellow-50 text-yellow-600"
+              }`}
+            >
+              {order.paymentStatus === "COMPLETED"
+                ? "Paid"
+                : order.paymentStatus === "FAILED"
+                  ? "Payment Failed"
+                  : order.paymentStatus === "CANCELLED"
+                    ? "Payment Cancelled"
+                    : order.paymentStatus === "CHARGEDBACK"
+                      ? "Charged Back"
+                      : "Awaiting Payment"}
+            </span>
+          </div>
           {order.payment?.payherePaymentId && (
             <p className="text-sm text-[#8C8C8C]">
               Reference: {order.payment.payherePaymentId}
@@ -215,5 +237,5 @@ export default async function OrderDetailPage({
         </div>
       </div>
     </div>
-  )
+  );
 }

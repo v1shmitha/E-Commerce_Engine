@@ -1,31 +1,31 @@
-import { DM_Sans, DM_Serif_Display } from "next/font/google"
-import { StoreProvider } from "@/engine/hooks/StoreProvider"
-import { storeConfig } from "@/config/stores/clothing.config"
-import StorefrontNav from "@/engine/components/layout/StorefrontNav"
-import type { Metadata } from "next"
+import { DM_Sans, DM_Serif_Display } from "next/font/google";
+import { StoreProvider } from "@/engine/hooks/StoreProvider";
+import { storeConfig } from "@/config/stores/clothing.config";
+import StorefrontNav from "@/engine/components/layout/StorefrontNav";
+import type { Metadata } from "next";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
-})
+});
 
 const dmSerif = DM_Serif_Display({
   subsets: ["latin"],
   weight: "400",
   variable: "--font-serif",
   display: "swap",
-})
+});
 
 export const metadata: Metadata = {
-  title: storeConfig.name,
+  // Title strategy (default + template) is defined once in the root layout.
   description: "Modern clothing store",
-}
+};
 
 export default function StorefrontLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <StoreProvider>
@@ -50,5 +50,5 @@ export default function StorefrontLayout({
         </footer>
       </div>
     </StoreProvider>
-  )
+  );
 }
