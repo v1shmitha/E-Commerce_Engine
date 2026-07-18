@@ -13,6 +13,7 @@ import {
   Settings,
 } from "lucide-react"
 import { useStore } from "@/engine/hooks/useStore"
+import { AdminSignOutButton } from "@/engine/components/layout/AdminSignOutButton"
 
 const navItems = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
@@ -64,14 +65,17 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         {/* Top bar */}
         <header className="flex h-14 items-center justify-between border-b bg-white px-6">
           <span className="text-sm text-gray-500">Admin Dashboard</span>
-          <a
-            href="/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-medium underline"
-          >
-            View Store
-          </a>
+          <div className="flex items-center gap-6">
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-medium underline"
+            >
+              View Store
+            </a>
+            <AdminSignOutButton />
+          </div>
         </header>
 
         {/* Page content */}
