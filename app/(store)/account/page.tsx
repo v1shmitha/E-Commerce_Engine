@@ -2,7 +2,7 @@ import { createClient } from "@/engine/lib/supabase/server";
 import { prisma } from "@/engine/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { signOut } from "@/engine/api/auth";
+import { SignOutButton } from "@/engine/components/account/SignOutButton";
 
 export default async function AccountPage() {
   const supabase = await createClient();
@@ -56,14 +56,7 @@ export default async function AccountPage() {
             {customer.firstName} {customer.lastName} · {customer.email}
           </p>
         </div>
-        <form action={signOut}>
-          <button
-            type="submit"
-            className="text-[11px] tracking-[0.15em] uppercase text-[#8C8C8C] hover:text-[#0A0A0A] border-b border-[#8C8C8C] hover:border-[#0A0A0A] transition-colors"
-          >
-            Sign Out
-          </button>
-        </form>
+        <SignOutButton />
       </div>
 
       {/* Quick Stats */}
