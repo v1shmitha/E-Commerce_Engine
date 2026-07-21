@@ -72,7 +72,7 @@ export default async function HomePage() {
             className="text-4xl md:text-7xl text-white leading-none"
             style={{ fontFamily: "var(--font-serif)" }}
           >
-            The Edit
+            Modern Designs
           </h1>
           <div className="mt-6 flex items-center gap-6">
             <Link
