@@ -15,15 +15,20 @@ export async function updateProfile(formData: FormData) {
   const lastName = formData.get("lastName") as string
   const phone = formData.get("phone") as string
 
-  await prisma.customer.update({
-    where: { id: data.user.id },
-    data: {
-      firstName,
-      lastName,
-      phone: phone || null,
-    },
-  })
+  try {
+    await prisma.customer.update({
+      where: { id: data.user.id },
+      data: {
+        firstName,
+        lastName,
+        phone: phone || null,
+      },
+    })
+  } catch {
+    return { error: "Failed to update profile. Please try again." }
+  }
 
   revalidatePath("/account/profile")
   revalidatePath("/account")
+  return { success: true }
 }

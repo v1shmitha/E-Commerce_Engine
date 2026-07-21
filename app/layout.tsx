@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import "./globals.css"
+import { Toaster } from "sonner"
 import { StoreProvider } from "@/engine/hooks/StoreProvider"
 import { storeConfig } from "@/config/stores/clothing.config"
 import { SITE_URL, SITE_NAME } from "@/engine/lib/seo"
@@ -48,6 +49,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <StoreProvider>{children}</StoreProvider>
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   )
